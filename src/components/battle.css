@@ -58,8 +58,8 @@
 .match-clock { font-family: var(--heading); font-size: 38px; font-weight: 600; line-height: 1.1; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
 .match-clock.urgent { color: #ffc3a0; animation: critical-pulse 1s infinite; }
 .match-clock-line { height: 2px; width: 56px; margin-top: 4px; background: linear-gradient(90deg,transparent,#c9e69f,transparent); }
-.hud-tools { grid-area: tools; align-self: start; width: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: auto; }
-.hud-tool-buttons { display: flex; gap: 6px; width: auto; }
+.hud-tools { grid-area: tools; align-self: start; width: max-content; max-width: 100%; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; pointer-events: auto; }
+.hud-tool-buttons { display: flex; gap: 5px; width: auto; }
 .hud-icon { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; padding: 0; border: 1px solid #d2e4bc50; background: #142112c9; border-radius: 7px; color: #e6eddf; touch-action: manipulation; }
 .hud-icon:hover { background: #3a512ba8; border-color: #c1eb85a0; }
 .hud-icon.pause-button { color: #d9efb9; border-color: #bdd79582; background: #283c1cdb; }
@@ -161,7 +161,7 @@
 .joystick-label { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 9px; line-height: 1.3; letter-spacing: 1.5px; color: #e3efd7; text-shadow: 0 1px 3px #0009; pointer-events: none; }
 .touch-joystick[data-active="true"] .joystick-base { border-color: #d0f3aa; background: #263d1d99; }
 .touch-joystick[data-active="true"] .joystick-knob { background: #c1eb85c4; border-color: #e6fbcf; }
-.touch-action-pad { position: absolute; right: var(--hud-right); bottom: var(--controls-bottom); display: grid; grid-template-columns: var(--action-size) var(--fire-size) var(--action-size); grid-template-rows: var(--action-size) var(--fire-size); grid-template-areas: "grenade aim jump" "reload fire mic"; align-items: center; justify-items: center; gap: var(--control-gap); z-index: 1; pointer-events: none; }
+.touch-action-pad { position: absolute; right: var(--hud-right); bottom: var(--controls-bottom); display: grid; grid-template-columns: var(--action-size) var(--fire-size) var(--action-size); grid-template-rows: var(--action-size) var(--action-size); grid-template-areas: "grenade fire jump" "reload fire aim"; align-items: center; justify-items: center; gap: var(--control-gap); z-index: 1; pointer-events: none; }
 .touch-fire { grid-area: fire; width: var(--fire-size); height: var(--fire-size); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0; border: 2px solid #e0f5c3c9; border-radius: 50%; color: #effddd; background: #88b3588c; box-shadow: 0 4px 20px #13210d3b,inset 0 0 15px #e2f7c218; pointer-events: auto; touch-action: none; }
 .touch-fire > span { font-size: 11px; font-weight: 800; letter-spacing: 1px; }
 .touch-fire > small { font-size: 7px; line-height: 1.2; letter-spacing: .15px; }
@@ -173,9 +173,6 @@
 .touch-jump { grid-area: jump; }
 .touch-grenade { grid-area: grenade; }
 .touch-aim { grid-area: aim; }
-.touch-mic { grid-area: mic; transition: background .12s, border-color .12s, color .12s; }
-.touch-mic.transmitting { background: var(--lime); color: #152410; border-color: #edffda; box-shadow: 0 0 15px #c1eb8575; }
-.touch-mic.muted { color: #fca5a5; border-color: #ef444455; background: #2f1717bf; }
 .squad-radio-hud { position: absolute; top: calc(var(--hud-top-edge) + var(--header-height) + 14px); left: var(--hud-left); display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #142312f0; border: 1px solid #c1eb8580; border-radius: 4px; color: #effce0; font-size: 9px; font-weight: 600; letter-spacing: .5px; box-shadow: 0 4px 18px #08130766; animation: field-in .2s ease-out; pointer-events: none; z-index: 6; }
 .squad-radio-hud svg { color: var(--lime); }
 .radio-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px #c1eb85; animation: critical-pulse .8s infinite alternate; }
@@ -262,7 +259,7 @@
 @keyframes loading-track { from { transform: translateX(-70px); } to { transform: translateX(230px); } }
 @media (max-width: 1050px) {
   .battle-shell { --hud-edge: 18px; }
-  .hud-top { grid-template-columns: minmax(0,1fr) 128px 80px 144px; gap: 16px; }
+  .hud-top { grid-template-columns: minmax(0,1fr) 128px 80px minmax(192px, max-content); gap: 14px; }
   .hud-operation h1 { font-size: 23px; }
   .hud-bottom { grid-template-columns: 168px 112px minmax(0,1fr) 172px; gap: 10px; }
   .minimap-panel { width: 120px; }
@@ -282,14 +279,14 @@
     --fire-size: 78px;
     --control-gap: 8px;
   }
-  .hud-top { grid-template-columns: minmax(0,1fr) 144px; grid-template-rows: 62px 36px 42px; grid-template-areas: "operation tools" "radar timer" "radar score"; gap: 8px 12px; align-items: start; }
-  .hud-operation { align-self: center; gap: 8px; }
+  .hud-top { grid-template-columns: minmax(0,1fr) minmax(192px, max-content); grid-template-rows: 62px 36px 42px; grid-template-areas: "operation tools" "radar timer" "radar score"; gap: 8px 10px; align-items: start; }
+  .hud-operation { align-self: center; gap: 8px; overflow: hidden; max-height: 62px; }
   .operation-icon { display: none; }
-  .operation-type { font-size: 8px; letter-spacing: .6px; }
-  .hud-operation h1 { font-size: 23px; line-height: 1.2; margin: 3px 0; }
-  .hud-room-meta { display: flex; flex-wrap: wrap; gap: 2px 7px; font-size: 10px; line-height: 13px; }
-  .hud-room-meta > bdi { max-width: 100%; }
-  .hud-room-code { font-size: 8px; padding: 0 4px; }
+  .operation-type { font-size: 8px; letter-spacing: .6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-operation h1 { font-size: 21px; line-height: 1.2; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-room-meta { display: flex; flex-wrap: nowrap; gap: 2px 7px; font-size: 10px; line-height: 13px; overflow: hidden; white-space: nowrap; }
+  .hud-room-meta > bdi { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud-room-code { font-size: 8px; padding: 0 4px; flex-shrink: 0; }
   .hud-match { flex-direction: row; justify-content: space-between; align-items: center; gap: 8px; height: 36px; }
   .match-clock { font-size: 31px; letter-spacing: 1px; }
   .match-mode { font-size: 9px; letter-spacing: .4px; }
@@ -335,15 +332,15 @@
 }
 @media (orientation: portrait) and (max-width: 400px) {
   .battle-shell { --stick-hit: clamp(116px,calc(100vw - 212px),144px); --stick-size: calc(var(--stick-hit) - 24px); --action-size: 44px; --fire-size: 72px; }
-  .hud-top { column-gap: 10px; }
-  .hud-operation h1 { font-size: 21px; }
-  .hud-room-meta { font-size: 9px; }
+  .hud-top { column-gap: 8px; }
+  .hud-operation h1 { font-size: 17px; margin: 1px 0; }
+  .hud-room-meta { font-size: 8px; }
   .resource-panel { padding-left: 7px; padding-right: 7px; }
   .touch-action { border-radius: 10px; gap: 2px; }
   .touch-action > span { font-size: 8px; }
   .touch-fire > svg { width: 27px; height: 27px; }
   .touch-fire > small { font-size: 6px; }
-  .battle-arabic .hud-operation h1 { font-size: 17px; }
+  .battle-arabic .hud-operation h1 { font-size: 16px; }
 }
 /* Landscape moves the radar into the top grid and keeps both thumb zones low. */
 @media (orientation: landscape) and (max-height: 600px) {
@@ -360,14 +357,14 @@
     --control-gap: 8px;
     --controls-bottom: calc(var(--hud-bottom-edge) + var(--dock-height) + 10px);
   }
-  .hud-top { grid-template-columns: minmax(0,1fr) 120px 62px 72px 144px; grid-template-areas: "operation score radar timer tools"; column-gap: 12px; align-items: start; }
-  .hud-operation { align-self: center; gap: 9px; }
+  .hud-top { grid-template-columns: minmax(0,1fr) 114px 62px 68px minmax(192px, max-content); grid-template-areas: "operation score radar timer tools"; column-gap: 10px; align-items: start; }
+  .hud-operation { align-self: center; gap: 8px; }
   .operation-icon { width: 30px; height: 34px; }
-  .hud-operation h1 { font-size: 23px; }
+  .hud-operation h1 { font-size: 22px; }
   .operation-type { font-size: 8px; letter-spacing: .8px; }
   .hud-room-meta { font-size: 9px; gap: 6px; }
   .hud-room-code { font-size: 8px; padding: 0 4px; }
-  .hud-tools { align-self: start; }
+  .hud-tools { align-self: start; width: max-content; }
   .hud-match { align-self: center; }
   .match-clock { font-size: 32px; }
   .match-mode { font-size: 8px; letter-spacing: .4px; }
@@ -434,36 +431,72 @@
   .battle-arabic .hud-operation h1 { font-size: 19px; }
 }
 /* Small landscape phones give the room and statistics their own two rows. */
-@media (orientation: landscape) and (max-height: 600px) and (max-width: 700px) {
-  .hud-top { grid-template-columns: minmax(0,1fr) 62px 62px 144px; grid-template-rows: 40px 26px; grid-template-areas: "operation radar timer tools" "score radar timer tools"; gap: 6px 10px; }
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 760px) {
+  .hud-top {
+    grid-template-columns: minmax(0,1fr) 62px 64px minmax(192px, max-content);
+    grid-template-rows: 40px 28px;
+    grid-template-areas:
+      "operation radar timer tools"
+      "score     radar timer tools";
+    gap: 4px 8px;
+  }
   .operation-icon,.operation-type { display: none; }
   .hud-operation { align-self: start; }
-  .hud-operation h1 { font-size: 21px; margin: 0 0 3px; }
+  .hud-operation h1 { font-size: 20px; margin: 0 0 2px; }
   .hud-room-meta { font-size: 9px; line-height: 12px; }
-  .hud-score { display: flex; align-items: center; align-self: end; justify-content: flex-start; gap: 9px; background: transparent; border: 0; border-radius: 0; padding: 0; height: 26px; }
-  .hud-score > b { font-size: 25px; }
+  .hud-score {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    justify-content: flex-start;
+    gap: 8px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    height: 28px;
+  }
+  .hud-score > b { font-size: 24px; }
   .hud-score > small { font-size: 9px; }
   .hud-score > .score-label { font-size: 8px; }
   .stat-description { display: none; }
-  .hud-match { align-self: start; padding-top: 10px; }
+  .hud-match { align-self: center; padding-top: 0; }
+  .minimap-panel { align-self: center; }
   .game-connection { font-size: 7px; }
-  .battle-arabic .hud-operation h1 { font-size: 18px; }
+  .battle-arabic .hud-operation h1 { font-size: 17px; }
 }
 @media (orientation: landscape) and (max-height: 350px) {
-  .battle-shell { --stick-hit: 128px; --stick-size: 100px; --action-size: 44px; --fire-size: 72px; }
+  .battle-shell {
+    --stick-hit: 120px;
+    --stick-size: 96px;
+    --action-size: 44px;
+    --fire-size: 72px;
+    --header-height: 66px;
+  }
   .touch-action > svg { width: 20px; height: 20px; }
   .engage-panel { padding: 17px 22px; }
   .engage-panel h2 { font-size: 28px; }
 }
 /* Browser chrome can leave under 310px of actual landscape height. Reflow, don't scale. */
 @media (orientation: landscape) and (max-height: 310px) {
-  .battle-shell { --stick-hit: 104px; --stick-size: 88px; --fire-size: 76px; }
+  .battle-shell {
+    --stick-hit: 96px;
+    --stick-size: 80px;
+    --fire-size: 72px;
+    --action-size: 44px;
+    --header-height: 60px;
+    --dock-height: 48px;
+    --control-gap: 6px;
+    --controls-bottom: calc(var(--hud-bottom-edge) + var(--dock-height) + 6px);
+  }
   .touch-action-pad {
+    grid-template-columns: var(--action-size) var(--fire-size) var(--action-size);
     grid-template-rows: var(--action-size) var(--action-size);
     grid-template-areas: "grenade fire jump" "reload fire aim";
+    gap: var(--control-gap);
   }
   .joystick-label { font-size: 8px; }
-  .field-notice { top: calc(50% + 30px); max-width: min(200px,30%); padding: 5px 8px; gap: 5px; }
+  .field-notice { top: calc(50% + 28px); max-width: min(200px,30%); padding: 5px 8px; gap: 5px; }
   .field-notice > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 }
 

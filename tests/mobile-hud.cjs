@@ -55,7 +55,7 @@ async function auditLayout(page, name, safe = {}) {
     };
   });
   fs.writeFileSync(`.checks/hud/${name}.json`, JSON.stringify(result, null, 2));
-  await page.screenshot({ path: `.checks/hud/${name}.png` });
+  if (!process.env.HUD_FAST || result.failures.length > 0) await page.screenshot({ path: `.checks/hud/${name}.png` });
   assert.deepEqual(result.failures, [], `${name}: ${result.failures.join('; ')}`);
   console.log(`PASS: ${name} — separated HUD, clear aim, reachable 44px+ controls`);
 }

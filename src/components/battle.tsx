@@ -325,7 +325,34 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
         </div>
         <div className="hud-tools" data-hud="tools">
           <div className="hud-tool-buttons">
-            <button className={`hud-icon mic-button ${micMuted ? "is-muted" : micTransmitting ? "is-transmitting" : "is-active"}`} aria-label={micMuted ? "Unmute microphone" : "Mute microphone"} title={micMuted ? tr("Microphone muted (V to push-to-talk)", "الميكروفون مكتوم (V للتحدث)") : tr("Microphone on (V to push-to-talk)", "الميكروفون مفعّل (V للتحدث)")} onClick={toggleMic}>{micMuted ? <MicOff size={18}/> : <Mic size={18}/>}</button>
+            <button
+              className={`hud-icon mic-button ${micMuted ? "is-muted" : micTransmitting ? "is-transmitting" : "is-active"}`}
+              aria-label={micMuted ? "Unmute microphone" : "Mute microphone"}
+              title={micMuted ? tr("Microphone muted (V to push-to-talk)", "الميكروفون مكتوم (V للتحدث)") : tr("Microphone on (V to push-to-talk)", "الميكروفون مفعّل (V للتحدث)")}
+              onClick={toggleMic}
+              onPointerDown={event => {
+                if (micMode === "ptt") {
+                  event.preventDefault();
+                  voiceRef.current?.setPtt(true);
+                  setMicTransmitting(true);
+                }
+              }}
+              onPointerUp={event => {
+                if (micMode === "ptt") {
+                  event.preventDefault();
+                  voiceRef.current?.setPtt(false);
+                  setMicTransmitting(false);
+                }
+              }}
+              onPointerCancel={() => {
+                if (micMode === "ptt") {
+                  voiceRef.current?.setPtt(false);
+                  setMicTransmitting(false);
+                }
+              }}
+            >
+              {micMuted ? <MicOff size={18}/> : <Mic size={18}/>}
+            </button>
             <button className="hud-icon" aria-label={sound ? "Mute sound" : "Enable sound"} title={tr("Sound", "الصوت")} onClick={toggleSound}>{sound ? <Volume2 size={18}/> : <VolumeX size={18}/>}</button>
             <button className="hud-icon fullscreen-button" aria-label="Toggle fullscreen" title={tr("Fullscreen", "ملء الشاشة")} onClick={fullscreen}><Maximize size={18}/></button>
             <button className="hud-icon pause-button" aria-label="Pause game" title={tr("Pause", "إيقاف مؤقت")} onClick={() => { resetTouch(); engine.current?.setPaused(true); }}><Pause size={19}/></button>
@@ -393,10 +420,6 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
         <button className="touch-action touch-jump" aria-label="Jump" onPointerDown={event => { event.preventDefault(); event.stopPropagation(); engine.current?.jump(); }}><ArrowUp size={24}/><span>{tr("JUMP", "قفز")}</span></button>
         <button className="touch-action touch-grenade" aria-label="Throw grenade" disabled={hud.grenades === 0} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); engine.current?.grenade(); }}><Bomb size={21}/><span>{tr("FRAG", "قنبلة")} {hud.grenades}</span></button>
         <button className={`touch-action touch-aim ${aiming ? "active" : ""}`} aria-label="Toggle aim down sights" aria-pressed={aiming} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); engine.current?.aim(!aiming); setAiming(!aiming); }}><Target size={23}/><span>{tr("AIM", "تصويب")}</span></button>
-        <button className={`touch-action touch-mic ${micMuted ? "muted" : micTransmitting ? "transmitting" : ""}`} aria-label={tr("Squad microphone", "ميكروفون الفريق")} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); if (micMode === "ptt") { voiceRef.current?.setPtt(true); setMicTransmitting(true); } else { toggleMic(); } }} onPointerUp={event => { event.preventDefault(); event.stopPropagation(); if (micMode === "ptt") { voiceRef.current?.setPtt(false); setMicTransmitting(false); } }} onPointerCancel={() => { if (micMode === "ptt") { voiceRef.current?.setPtt(false); setMicTransmitting(false); } }}>
-          {micMuted ? <MicOff size={21}/> : <Mic size={21}/>}
-          <span>{micMuted ? tr("MUTED", "مكتوم") : micTransmitting ? tr("TALK", "تحدث") : tr("MIC", "مايك")}</span>
-        </button>
       </div>
     </div>}
 

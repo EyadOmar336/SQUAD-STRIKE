@@ -71,10 +71,15 @@ const memScores = globalForMem.__strike_memory_scores;
 function extractSqlParams(node: any): any[] {
   const params: any[] = [];
   function walk(n: any) {
-    if (!n) return;
+    if (n === null || n === undefined) return;
+    if (typeof n === "string" || typeof n === "number" || typeof n === "boolean" || n instanceof Date) {
+      if (typeof n === "string" && ["", " = ", " AND ", " OR ", " > ", " < ", ", "].includes(n)) return;
+      params.push(n);
+      return;
+    }
     if (typeof n === "object") {
-      if ("value" in n && !n.queryChunks && !n.getSQL) {
-        params.push(n.value);
+      if ("value" in n && !n.queryChunks && ("encoder" in n || !Array.isArray(n.value))) {
+        walk(n.value);
       }
       if (Array.isArray(n.queryChunks)) {
         for (const chunk of n.queryChunks) {
@@ -147,6 +152,20 @@ function createMemoryDb() {
                 return resolve([found].filter(Boolean));
               }
 
+              if (currentCondition) {
+                const strParam = params.find(
+                  (p) => typeof p === "string" && ![" = ", " AND ", " OR ", ""].includes(p.trim())
+                );
+                if (strParam) {
+                  const found = [...memRooms.values()].find(
+                    (r) =>
+                      r.code.toUpperCase() === strParam.toUpperCase() ||
+                      r.id === strParam
+                  );
+                  return resolve([found].filter(Boolean));
+                }
+              }
+
               const list = [...memRooms.values()]
                 .filter((r) => !r.isPrivate)
                 .sort((a, b) => {
@@ -176,11 +195,17 @@ function createMemoryDb() {
                 return resolve([byToken]);
               }
 
-              // Check if finding target player by id (e.g. hit or blast attacker or me by id)
+              // Check if finding player by id directly
               const stringParams = params.filter((p) => typeof p === "string");
+              const byId = stringParams.find((p) => memPlayers.has(p));
               const roomId = stringParams.find(
-                (p) => p.startsWith("public-") || memRooms.has(p) || /^[0-9a-f-]{36}$/i.test(p)
+                (p) => memRooms.has(p) || p.startsWith("public-")
               );
+
+              if (byId && !roomId) {
+                const p = memPlayers.get(byId);
+                return resolve([p].filter(Boolean));
+              }
 
               // If roomId is present: could be peers or room members
               if (roomId) {
@@ -196,8 +221,6 @@ function createMemoryDb() {
                 return resolve(members);
               }
 
-              // If specific player id
-              const byId = stringParams.find((p) => memPlayers.has(p));
               if (byId) {
                 const p = memPlayers.get(byId);
                 return resolve([p].filter(Boolean));
