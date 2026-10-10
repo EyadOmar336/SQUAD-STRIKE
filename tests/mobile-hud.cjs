@@ -112,9 +112,11 @@ async function auditLayout(page, name, safe = {}) {
     }
     await page.evaluate(() => { for (const edge of ['top','right','bottom','left']) document.documentElement.style.setProperty(`--game-safe-${edge}`, '0px'); });
     await page.setViewportSize({ width: 844, height: 390 });
-    await page.waitForTimeout(350);
+    await page.waitForTimeout(500);
 
     // Restart the existing match if test setup consumed health; the room session is unchanged.
+    // Settle after the viewport swap so the HUD is stable before interacting.
+    await page.waitForTimeout(800);
     await page.getByRole('button', { name: 'Pause game', exact: true }).tap();
     await page.getByRole('button', { name: 'RESTART OPERATION', exact: true }).tap();
     await page.waitForTimeout(450);

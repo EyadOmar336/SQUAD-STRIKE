@@ -26,8 +26,21 @@ export const players = pgTable("strike_players", {
   lastGrenadeAt: timestamp("last_grenade_at", { withTimezone: true }),
   playing: boolean("playing").notNull().default(false),
   lastShotAt: timestamp("last_shot_at", { withTimezone: true }),
+  // Last time this player polled the voice signaling channel (voice chat presence).
+  voiceAt: timestamp("voice_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("strike_players_room_idx").on(t.roomId, t.updatedAt)]);
+
+// WebRTC signaling relay: SDP offers/answers and ICE candidates between room members.
+export const voiceSignals = pgTable("strike_voice_signals", {
+  id: text("id").primaryKey(),
+  roomId: text("room_id").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  fromPlayer: text("from_player").notNull(),
+  toPlayer: text("to_player").notNull(),
+  kind: text("kind").notNull(),
+  payload: jsonb("payload").$type<unknown>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("strike_voice_signals_to_idx").on(t.toPlayer, t.createdAt)]);
 
 export const scores = pgTable("strike_scores", {
   id: text("id").primaryKey(),

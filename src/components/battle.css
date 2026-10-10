@@ -139,7 +139,28 @@
 .kill-confirmation > div > span { font-size: 9px; letter-spacing: 1px; }
 .kill-confirmation > span { font-size: 9px; font-weight: 700; letter-spacing: 1px; margin-top: 2px; }
 .kill-confirmation > small { font: 600 18px/1.2 var(--heading); color: #f6d190; letter-spacing: 1px; margin-top: 4px; }
-.field-notice { position: absolute; left: 50%; top: calc(var(--hud-top-edge) + var(--header-height) + 64px); transform: translateX(-50%); width: max-content; max-width: min(480px,calc(100% - 40px)); display: flex; align-items: center; gap: 9px; padding: 9px 14px; border: 1px solid #bbd6975e; border-radius: 4px; background: #172615de; font-size: 9px; line-height: 1.5; letter-spacing: .6px; text-align: center; color: #dfedce; animation: field-in .3s ease-out; }
+.center-feed { position: absolute; left: 50%; top: calc(var(--hud-top-edge) + var(--header-height) + 64px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; width: max-content; max-width: min(480px,calc(100% - 40px)); pointer-events: none; z-index: 2; }
+.field-notice { width: max-content; max-width: 100%; display: flex; align-items: center; gap: 9px; padding: 9px 14px; border: 1px solid #bbd6975e; border-radius: 4px; background: #172615de; font-size: 9px; line-height: 1.5; letter-spacing: .6px; text-align: center; color: #dfedce; animation: field-in .3s ease-out; }
+/* Squad voice chat: mic toggle states and the "who is speaking" indicator. */
+.hud-tools.has-voice .hud-tool-buttons { width: 94px; flex-wrap: wrap; justify-content: flex-end; }
+.voice-toggle[data-voice-status="live"] { color: #d9f5b4; border-color: #a6d477aa; background: #2c451fc9; }
+.voice-toggle[data-voice-status="muted"] { color: #ffc3a9; border-color: #e0866188; background: #3a2017c9; }
+.voice-toggle[data-voice-status="denied"],.voice-toggle[data-voice-status="error"],.voice-toggle[data-voice-status="unavailable"] { color: #ff9d7d; border-color: #d8785077; }
+.touch-mic { grid-area: mic; }
+.touch-mic[data-voice-status="live"] { color: #e7fcd0; background: #3c5c26c7; border-color: #c6ee9a; }
+.touch-mic[data-voice-status="muted"] { color: #ffc9ae; background: #43261bc7; border-color: #e29a78; }
+.touch-mic[data-voice-status="denied"],.touch-mic[data-voice-status="error"],.touch-mic[data-voice-status="unavailable"] { color: #ffb59a; border-color: #d8785080; }
+.pause-utilities > button[data-voice-status="muted"] { color: #f0a988; }
+.voice-status { display: flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid #bbd6975e; border-radius: 3px; background: #172615c4; font: 8px/14px monospace; letter-spacing: .7px; color: #d5e4c7; text-shadow: 0 1px 3px #000; }
+.voice-status svg { color: var(--lime); }
+.voice-status[data-voice-status="muted"] { color: #f2c0a2; border-color: #d8875f66; }
+.voice-status[data-voice-status="muted"] svg { color: #e8a583; }
+.voice-feed { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.voice-speaker { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid #c1eb8566; border-radius: 3px; background: #22331ade; font-size: 9px; font-weight: 700; letter-spacing: .8px; color: #e6f5cf; text-shadow: 0 1px 3px #000; animation: voice-pop .18s ease-out; }
+.voice-speaker svg { color: var(--lime); animation: voice-pulse .7s ease-in-out infinite; }
+.voice-dialog > .voice-alert { margin: 0 0 8px; padding: 10px 12px; border: 1px solid #d8785050; background: #da6c5110; border-radius: 3px; color: #f0b09b; font-size: 11px; line-height: 1.7; text-align: start; }
+.voice-dialog > .voice-waiting { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--lime); font-size: 11px; margin: 0 0 10px; }
+.voice-dialog > .voice-note { font-size: 10px; line-height: 1.7; color: #9db78a; margin: 14px 0 0; }
 .field-notice > svg { color: var(--lime); }
 .damage-vignette { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(ellipse,transparent 25%,#ba3a1640 75%,#df612c9e); animation: damage-flash .55s ease-out forwards; box-shadow: inset 0 0 90px #df573780; }
 .critical-vignette { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 80px #bb512b8c; animation: critical-pulse 1.3s ease-in-out infinite; }
@@ -156,7 +177,7 @@
 .joystick-label { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 9px; line-height: 1.3; letter-spacing: 1.5px; color: #e3efd7; text-shadow: 0 1px 3px #0009; pointer-events: none; }
 .touch-joystick[data-active="true"] .joystick-base { border-color: #d0f3aa; background: #263d1d99; }
 .touch-joystick[data-active="true"] .joystick-knob { background: #c1eb85c4; border-color: #e6fbcf; }
-.touch-action-pad { position: absolute; right: var(--hud-right); bottom: var(--controls-bottom); display: grid; grid-template-columns: var(--action-size) var(--fire-size) var(--action-size); grid-template-rows: var(--action-size) var(--fire-size); grid-template-areas: "grenade aim jump" "reload fire ."; align-items: center; justify-items: center; gap: var(--control-gap); z-index: 1; pointer-events: none; }
+.touch-action-pad { position: absolute; right: var(--hud-right); bottom: var(--controls-bottom); display: grid; grid-template-columns: var(--action-size) var(--fire-size) var(--action-size); grid-template-rows: var(--action-size) var(--fire-size); grid-template-areas: "grenade aim jump" "reload fire mic"; align-items: center; justify-items: center; gap: var(--control-gap); z-index: 1; pointer-events: none; }
 .touch-fire { grid-area: fire; width: var(--fire-size); height: var(--fire-size); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0; border: 2px solid #e0f5c3c9; border-radius: 50%; color: #effddd; background: #88b3588c; box-shadow: 0 4px 20px #13210d3b,inset 0 0 15px #e2f7c218; pointer-events: auto; touch-action: none; }
 .touch-fire > span { font-size: 11px; font-weight: 800; letter-spacing: 1px; }
 .touch-fire > small { font-size: 7px; line-height: 1.2; letter-spacing: .15px; }
@@ -238,6 +259,8 @@
 @keyframes hit-pop { 0% { opacity: 1; transform: scale(1.3); } 40% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.9); } }
 @keyframes kill-pop { from { opacity: 0; transform: translateX(-50%) scale(.75); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
 @keyframes field-in { from { opacity: 0; margin-top: -7px; } to { opacity: 1; margin-top: 0; } }
+@keyframes voice-pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes voice-pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 @keyframes damage-flash { from { opacity: 1; } to { opacity: 0; } }
 @keyframes critical-pulse { 0%,100% { opacity: .45; } 50% { opacity: .9; } }
 @keyframes loading-track { from { transform: translateX(-70px); } to { transform: translateX(230px); } }
@@ -305,7 +328,8 @@
   .grenade-count { font-size: 9px; gap: 4px; }
   .grenade-count > span { font-size: 8px; }
   .reload-progress { bottom: 1px; height: 2px; }
-  .field-notice { top: calc(var(--hud-top-edge) + var(--header-height) + 12px); max-width: calc(100% - var(--hud-left) - var(--hud-right)); font-size: 9px; padding: 7px 10px; }
+  .center-feed { top: calc(var(--hud-top-edge) + var(--header-height) + 12px); max-width: calc(100% - var(--hud-left) - var(--hud-right)); }
+  .field-notice { font-size: 9px; padding: 7px 10px; }
   .kill-confirmation > span { font-size: 8px; }
   .engage-panel { padding: 25px 23px; }
   .engage-panel h2 { font-size: 31px; }
@@ -386,7 +410,8 @@
   .touch-action > span { font-size: 8px; }
   .touch-fire > svg { width: 28px; height: 28px; }
   .touch-fire > small { font-size: 6px; }
-  .field-notice { top: calc(var(--hud-top-edge) + var(--header-height) + 5px); max-width: min(440px,60%); font-size: 8px; line-height: 1.4; padding: 6px 10px; letter-spacing: .3px; }
+  .center-feed { top: calc(var(--hud-top-edge) + var(--header-height) + 5px); max-width: min(440px,60%); }
+  .field-notice { font-size: 8px; line-height: 1.4; padding: 6px 10px; letter-spacing: .3px; }
   .kill-confirmation { top: calc(50% + 31px); }
   .kill-confirmation b { font-size: 25px; }
   .kill-confirmation > span { font-size: 8px; }
@@ -444,7 +469,9 @@
     grid-template-areas: "grenade fire jump" "reload fire aim";
   }
   .joystick-label { font-size: 8px; }
-  .field-notice { top: calc(50% + 30px); max-width: min(200px,30%); padding: 5px 8px; gap: 5px; }
+  .touch-mic { display: none; }
+  .center-feed { top: calc(50% + 30px); max-width: min(200px,30%); }
+  .field-notice { padding: 5px 8px; gap: 5px; }
   .field-notice > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 }
 

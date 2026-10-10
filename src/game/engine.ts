@@ -69,6 +69,7 @@ export class ArenaEngine {
   private lastQualityChange = 0;
   private bots: Actor[] = [];
   private remotes = new Map<string, Actor>();
+  private voiceSpeaking = new Set<string>();
   private pvp = false;
   private pvpStarted = false;
   private particles: Particle[] = [];
@@ -200,6 +201,17 @@ export class ArenaEngine {
   aim(active: boolean) { this.aiming = active; }
   jump() { if (!this.paused && !this.ended && this.grounded) { this.engage(); this.vertical = 6.8; this.grounded = false; this.audio.jump(); } }
   toggleSound(enabled: boolean) { this.audio.setEnabled(enabled); }
+  /** Voice chat indicator: tint the name tag of remote players who are speaking. */
+  setVoiceSpeaking(speakingIds: string[]) {
+    this.voiceSpeaking = new Set(speakingIds);
+    for (const actor of this.remotes.values()) this.applyVoiceTint(actor);
+  }
+  private applyVoiceTint(actor: Actor) {
+    const speaking = this.voiceSpeaking.has(actor.id);
+    const marker = actor.soldier.marker;
+    (marker.material as THREE.SpriteMaterial).color.setHex(speaking ? 0xc8ff96 : 0xffffff);
+    marker.scale.set(speaking ? 2.85 : 2.45, speaking ? 0.55 : 0.46, 1);
+  }
   setPaused(paused: boolean) {
     if (this.ended || this.paused === paused) return;
     this.paused = paused; this.firing = false; this.dragging = false; this.aiming = false; this.keys.clear(); this.touch.x = this.touch.y = 0; this.audio.pause(paused);
@@ -449,7 +461,7 @@ export class ArenaEngine {
       const seen = new Set<string>();
       for (const peer of peers) {
         seen.add(peer.id); let actor = this.remotes.get(peer.id);
-        if (!actor) { actor = this.actor(peer.id, peer.name, false); actor.soldier.group.position.set(peer.position.x, peer.position.y - EYE, peer.position.z); this.remotes.set(peer.id, actor); }
+        if (!actor) { actor = this.actor(peer.id, peer.name, false); actor.soldier.group.position.set(peer.position.x, peer.position.y - EYE, peer.position.z); this.remotes.set(peer.id, actor); this.applyVoiceTint(actor); }
         actor.target.set(peer.position.x, peer.position.y - EYE, peer.position.z); actor.yaw = peer.position.yaw + Math.PI; actor.hp = peer.hp; actor.alive = peer.hp > 0;
         if (peer.shots > actor.shots) { actor.flashUntil = performance.now() + 120; const origin = actor.target.clone().add(new THREE.Vector3(0, 1.4, 0)); const direction = new THREE.Vector3(-Math.sin(peer.position.yaw), 0, -Math.cos(peer.position.yaw)); this.tracer(origin, origin.clone().addScaledVector(direction, 35), 0xffbd83); if (origin.distanceTo(this.player) < 35) this.audio.distantShot(); } actor.shots = peer.shots;
       }
