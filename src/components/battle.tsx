@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type RefObject, type PointerEvent as ReactPointerEvent } from "react";
-import { ArrowRight, ArrowUp, Bomb, ChevronLeft, Copy, Crosshair, Heart, Home, Maximize, Pause, Play, Radio, RotateCcw, Shield, ShieldCheck, Signal, SlidersHorizontal, Skull, Swords, Target, Trophy, Users, Volume2, VolumeX, Zap } from "lucide-react";
+import { ArrowRight, ArrowUp, Bomb, ChevronLeft, Copy, Crosshair, Heart, Home, Maximize, Mic, MicOff, Pause, Play, Radio, RotateCcw, Shield, ShieldCheck, Signal, SlidersHorizontal, Skull, Swords, Target, Trophy, Users, Volume2, VolumeX, Zap } from "lucide-react";
 import type { ArenaEngine } from "@/game/engine";
+import { SquadVoice, type VoiceMode, type VoiceStatus } from "@/game/voice";
 import { MAPS, readLocalScores, type GameConfig, type GameResult, type HudData } from "@/lib/game-types";
 import "./battle.css";
 
@@ -107,6 +108,14 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
   const firePointer = useRef<{ id: number; x: number; y: number; target: HTMLElement } | null>(null);
   const [touchSensitivity, setTouchSensitivity] = useState(0.9);
   const touchSensitivityRef = useRef(0.9);
+  const voiceRef = useRef<SquadVoice | null>(null);
+  const [micStatus, setMicStatus] = useState<VoiceStatus>("uninitialized");
+  const [micMuted, setMicMuted] = useState(config.settings.micMuted ?? false);
+  const [micMode, setMicMode] = useState<VoiceMode>(config.settings.micMode || "open");
+  const [micTransmitting, setMicTransmitting] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [micSpeaking, setMicSpeaking] = useState(false);
+
   const resetTouch = useCallback(() => {
     for (const pointer of [lookPointer, firePointer]) {
       const active = pointer.current; pointer.current = null;
@@ -120,6 +129,80 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
     engine.current?.aim(false);
     setAiming(false);
   }, []);
+
+  const tr = useCallback((en: string, arabic: string) => ar ? arabic : en, [ar]);
+
+  useEffect(() => {
+    if (config.settings.micEnabled === false) return;
+    const voice = new SquadVoice(config.settings.micMode || "open", config.settings.micMuted ?? false);
+    voiceRef.current = voice;
+
+    const unsub = voice.subscribe({
+      onStatusChange: (st) => setMicStatus(st),
+      onSpeakingChange: (spk) => {
+        setMicSpeaking(spk);
+        setMicTransmitting(voice.isTransmitting() && spk);
+      },
+      onVolumeChange: (lvl) => {
+        setMicLevel(lvl);
+        setMicTransmitting(voice.isTransmitting() && lvl > 0.08);
+      },
+    });
+
+    voice.init().then((ok) => {
+      if (ok) {
+        setNotice({ id: performance.now(), text: tr("SQUAD COMMS ACTIVE · PRESS 'V' TO TALK", "الميكروفون مفعّل · اضغط V للتحدث") });
+      }
+    });
+
+    return () => {
+      unsub();
+      voice.dispose();
+      voiceRef.current = null;
+    };
+  }, [config.settings.micEnabled, config.settings.micMode, config.settings.micMuted, tr]);
+
+  const toggleMic = useCallback(async () => {
+    if (!voiceRef.current || micStatus === "uninitialized" || micStatus === "denied") {
+      const voice = voiceRef.current || new SquadVoice(micMode, false);
+      voiceRef.current = voice;
+      const ok = await voice.init();
+      if (ok) {
+        setMicMuted(false);
+        setNotice({ id: performance.now(), text: tr("MICROPHONE CONNECTED", "تم تفعيل الميكروفون") });
+      } else {
+        setNotice({ id: performance.now(), text: tr("MIC PERMISSION REQUIRED", "يرجى السماح بالوصول للميكروفون") });
+      }
+      return;
+    }
+    const next = voiceRef.current.toggleMute();
+    setMicMuted(next);
+    setNotice({ id: performance.now(), text: next ? tr("MIC MUTED", "تم كتم الميكروفون") : tr("MIC ACTIVE", "الميكروفون مفعّل") });
+  }, [micStatus, micMode, tr]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === "KeyV" && !e.repeat) {
+        voiceRef.current?.setPtt(true);
+        setMicTransmitting(voiceRef.current?.isTransmitting() ?? false);
+      } else if (e.code === "KeyM" && !e.repeat) {
+        toggleMic();
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "KeyV") {
+        voiceRef.current?.setPtt(false);
+        setMicTransmitting(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [toggleMic]);
 
   useEffect(() => {
     try {
@@ -141,7 +224,6 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
       document.removeEventListener("visibilitychange", onHidden);
     };
   }, [resetTouch]);
-  const tr = (en: string, arabic: string) => ar ? arabic : en;
   const map = MAPS.find(m => m.id === config.map)!;
 
   useEffect(() => {
@@ -243,6 +325,7 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
         </div>
         <div className="hud-tools" data-hud="tools">
           <div className="hud-tool-buttons">
+            <button className={`hud-icon mic-button ${micMuted ? "is-muted" : micTransmitting ? "is-transmitting" : "is-active"}`} aria-label={micMuted ? "Unmute microphone" : "Mute microphone"} title={micMuted ? tr("Microphone muted (V to push-to-talk)", "الميكروفون مكتوم (V للتحدث)") : tr("Microphone on (V to push-to-talk)", "الميكروفون مفعّل (V للتحدث)")} onClick={toggleMic}>{micMuted ? <MicOff size={18}/> : <Mic size={18}/>}</button>
             <button className="hud-icon" aria-label={sound ? "Mute sound" : "Enable sound"} title={tr("Sound", "الصوت")} onClick={toggleSound}>{sound ? <Volume2 size={18}/> : <VolumeX size={18}/>}</button>
             <button className="hud-icon fullscreen-button" aria-label="Toggle fullscreen" title={tr("Fullscreen", "ملء الشاشة")} onClick={fullscreen}><Maximize size={18}/></button>
             <button className="hud-icon pause-button" aria-label="Pause game" title={tr("Pause", "إيقاف مؤقت")} onClick={() => { resetTouch(); engine.current?.setPaused(true); }}><Pause size={19}/></button>
@@ -260,6 +343,19 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
         </div>
       </header>
       <div className="compass" aria-hidden="true"><span>W</span><i/><span>NW</span><i/><strong>N</strong><i/><span>NE</span><i/><span>E</span><span className="compass-pointer"/></div>
+      {!blocked && (micTransmitting || micSpeaking) && (
+        <div className="squad-radio-hud">
+          <div className="radio-pulse"/>
+          <Radio size={13}/>
+          <span>{tr("SQUAD RADIO · TRANSMITTING", "الراديو الميداني · جارٍ البث")}</span>
+          <div className="radio-waves">
+            <span style={{ height: `${Math.max(4, Math.round(micLevel * 18))}px` }}/>
+            <span style={{ height: `${Math.max(6, Math.round(micLevel * 24))}px` }}/>
+            <span style={{ height: `${Math.max(4, Math.round(micLevel * 18))}px` }}/>
+            <span style={{ height: `${Math.max(2, Math.round(micLevel * 12))}px` }}/>
+          </div>
+        </div>
+      )}
       {!blocked && <div className={`crosshair ${hud.reloading ? "reloading" : ""}`}><i/><i/><i/><i/><span/>{hit > 0 && <div key={`hit-${hit}`} className="hit-marker"><i/><i/><i/><i/></div>}</div>}
       {kill && !blocked && <div key={kill.id} className="kill-confirmation"><div><Crosshair size={15}/><b>+{kill.points}</b><span>XP</span></div><span>{kill.text}</span>{hud.combo > 1 && <small>{hud.combo}× {tr("COMBO", "متتالية")}</small>}</div>}
       {notice && !blocked && <div className="field-notice" key={notice.id}><Radio size={13}/><span>{notice.text}</span></div>}
@@ -274,7 +370,7 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
           <div className="resource-heading"><Shield size={16}/><span>{tr("ARMOR", "الدرع")}</span></div>
           <strong aria-hidden="true">—</strong><small>{tr("UNAVAILABLE", "غير متاح")}</small>
         </section>
-        <div className="desktop-controls"><span><kbd>W A S D</kbd>{tr("MOVE", "تحرك")}</span><span><kbd>R</kbd>{tr("RELOAD", "لقّم")}</span><span><kbd>G</kbd>{tr("FRAG", "قنبلة")}</span><span><kbd>SPACE</kbd>{tr("JUMP", "اقفز")}</span><span><kbd>ESC</kbd>{tr("PAUSE", "توقف")}</span></div>
+        <div className="desktop-controls"><span><kbd>W A S D</kbd>{tr("MOVE", "تحرك")}</span><span><kbd>V</kbd>{tr("VOICE PTT", "مايك")}</span><span><kbd>M</kbd>{tr("MUTE", "كتم")}</span><span><kbd>R</kbd>{tr("RELOAD", "لقّم")}</span><span><kbd>G</kbd>{tr("FRAG", "قنبلة")}</span><span><kbd>SPACE</kbd>{tr("JUMP", "اقفز")}</span><span><kbd>ESC</kbd>{tr("PAUSE", "توقف")}</span></div>
         <section className={`ammo-panel resource-panel ${hud.reloading ? "is-reloading" : ""}`} data-hud="ammo" aria-label={`${tr("Ammunition", "الذخيرة")} ${hud.ammo}`}>
           <div className="weapon-label"><span>M4A1</span><span>{hud.reloading ? tr("RELOADING", "تلقيم") : tr("AUTO", "تلقائي")}</span></div>
           <div className="ammo-count"><strong className={hud.ammo < 8 ? "low-ammo" : ""}>{String(hud.ammo).padStart(2, "0")}</strong><span>/ ∞</span></div>
@@ -297,6 +393,10 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
         <button className="touch-action touch-jump" aria-label="Jump" onPointerDown={event => { event.preventDefault(); event.stopPropagation(); engine.current?.jump(); }}><ArrowUp size={24}/><span>{tr("JUMP", "قفز")}</span></button>
         <button className="touch-action touch-grenade" aria-label="Throw grenade" disabled={hud.grenades === 0} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); engine.current?.grenade(); }}><Bomb size={21}/><span>{tr("FRAG", "قنبلة")} {hud.grenades}</span></button>
         <button className={`touch-action touch-aim ${aiming ? "active" : ""}`} aria-label="Toggle aim down sights" aria-pressed={aiming} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); engine.current?.aim(!aiming); setAiming(!aiming); }}><Target size={23}/><span>{tr("AIM", "تصويب")}</span></button>
+        <button className={`touch-action touch-mic ${micMuted ? "muted" : micTransmitting ? "transmitting" : ""}`} aria-label={tr("Squad microphone", "ميكروفون الفريق")} onPointerDown={event => { event.preventDefault(); event.stopPropagation(); if (micMode === "ptt") { voiceRef.current?.setPtt(true); setMicTransmitting(true); } else { toggleMic(); } }} onPointerUp={event => { event.preventDefault(); event.stopPropagation(); if (micMode === "ptt") { voiceRef.current?.setPtt(false); setMicTransmitting(false); } }} onPointerCancel={() => { if (micMode === "ptt") { voiceRef.current?.setPtt(false); setMicTransmitting(false); } }}>
+          {micMuted ? <MicOff size={21}/> : <Mic size={21}/>}
+          <span>{micMuted ? tr("MUTED", "مكتوم") : micTransmitting ? tr("TALK", "تحدث") : tr("MIC", "مايك")}</span>
+        </button>
       </div>
     </div>}
 
@@ -305,7 +405,7 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
     {!ready && !error && <div className="battle-loading"><span className="loading-crosshair"><Crosshair size={45}/></span><span className="eyebrow">{tr("ESTABLISHING UPLINK", "جارٍ تجهيز الاتصال")}</span><h2>{tr("PREPARING THE BATTLEFIELD", "جارٍ تجهيز ساحة المعركة")}</h2><div className="loading-track"><span/></div><p>{map.name} <span>·</span> {tr("Checking your equipment…", "جارٍ فحص معداتك…")}</p></div>}
     {error && <div className="battle-overlay"><div className="battle-dialog"><ShieldCheck size={36}/><span className="eyebrow">{tr("DEPLOYMENT INTERRUPTED", "تعذر بدء المعركة")}</span><h2>{tr("LET’S REGROUP.", "لنحاول من جديد.")}</h2><p>{error}</p><button className="button button-primary full-width" onClick={onExit}><ChevronLeft size={17}/>{tr("RETURN TO LOBBY", "العودة للردهة")}</button></div></div>}
 
-    {paused && !result && <div className="battle-overlay"><div className="battle-dialog pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pause-title"><div className="pause-badge"><Pause size={27}/></div><span className="eyebrow">{tr("OPERATION PAUSED", "المعركة متوقفة مؤقتًا")}</span><h2 id="pause-title">{tr("TAKE A BREATHER.", "خذ استراحة.")}</h2><p>{config.session ? tr("Online opponents keep playing. Rejoin when you’re ready.", "اللاعبون الآخرون مستمرون. عد عندما تكون جاهزًا.") : tr("Your battlefield will be right here. Ready for another push?", "ساحة المعركة تنتظرك. جاهز للعودة؟")}</p><div className="pause-match"><img src={map.image} alt=""/><span><b>{map.name}</b><small>{hud.kills} ELIMINATIONS <i>·</i> {hud.score} PTS</small></span><strong>{clock}</strong></div><button className="button button-primary full-width" autoFocus onClick={() => engine.current?.setPaused(false)}><Play size={16}/>{tr("RESUME BATTLE", "استئناف المعركة")}<ArrowRight size={18}/></button><button className="button button-ghost full-width" onClick={restart}><RotateCcw size={16}/>{tr("RESTART OPERATION", "ابدأ من جديد")}</button>{config.session && <button className="button button-ghost full-width" onClick={copyCode}><Copy size={15}/>{tr("INVITE A FRIEND", "ادعُ صديقًا")}<span className="pause-room-code">{config.session.room.code}</span></button>}<div className="pause-utilities"><button onClick={toggleSound}>{sound ? <Volume2 size={16}/> : <VolumeX size={16}/>} {sound ? tr("Sound on", "الصوت مفعّل") : tr("Sound off", "الصوت مغلق")}</button><button onClick={fullscreen}><Maximize size={15}/>{tr("Fullscreen", "ملء الشاشة")}</button></div>{touchDevice && <div className="touch-tuning" dir={ar ? "rtl" : "ltr"}>
+    {paused && !result && <div className="battle-overlay"><div className="battle-dialog pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pause-title"><div className="pause-badge"><Pause size={27}/></div><span className="eyebrow">{tr("OPERATION PAUSED", "المعركة متوقفة مؤقتًا")}</span><h2 id="pause-title">{tr("TAKE A BREATHER.", "خذ استراحة.")}</h2><p>{config.session ? tr("Online opponents keep playing. Rejoin when you’re ready.", "اللاعبون الآخرون مستمرون. عد عندما تكون جاهزًا.") : tr("Your battlefield will be right here. Ready for another push?", "ساحة المعركة تنتظرك. جاهز للعودة؟")}</p><div className="pause-match"><img src={map.image} alt=""/><span><b>{map.name}</b><small>{hud.kills} ELIMINATIONS <i>·</i> {hud.score} PTS</small></span><strong>{clock}</strong></div><button className="button button-primary full-width" autoFocus onClick={() => engine.current?.setPaused(false)}><Play size={16}/>{tr("RESUME BATTLE", "استئناف المعركة")}<ArrowRight size={18}/></button><button className="button button-ghost full-width" onClick={restart}><RotateCcw size={16}/>{tr("RESTART OPERATION", "ابدأ من جديد")}</button>{config.session && <button className="button button-ghost full-width" onClick={copyCode}><Copy size={15}/>{tr("INVITE A FRIEND", "ادعُ صديقًا")}<span className="pause-room-code">{config.session.room.code}</span></button>}<div className="pause-utilities"><button onClick={toggleMic}>{micMuted ? <MicOff size={16}/> : <Mic size={16}/>} {micMuted ? tr("Mic muted", "المايك مكتوم") : tr("Mic on", "المايك مفعّل")}</button><button onClick={toggleSound}>{sound ? <Volume2 size={16}/> : <VolumeX size={16}/>} {sound ? tr("Sound on", "الصوت مفعّل") : tr("Sound off", "الصوت مغلق")}</button><button onClick={fullscreen}><Maximize size={15}/>{tr("Fullscreen", "ملء الشاشة")}</button></div><div className="mic-settings-box"><div className="mic-settings-row"><span>{tr("Squad Comms Mode", "نمط المحادثة الصوتية")}</span><button className="button button-ghost" style={{ height: "30px", padding: "0 10px", fontSize: "10px" }} onClick={() => { const next = micMode === "open" ? "ptt" : "open"; setMicMode(next); voiceRef.current?.setMode(next); }}>{micMode === "open" ? tr("Open Mic", "مفتوح دائمًا") : tr("Push-to-Talk (V)", "اضغط للتحدث (V)")}</button></div><div className="mic-test-container"><div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", color: "#a8be95" }}><span>{tr("Mic Input Level", "مستوى صوت الميكروفون")}</span><span>{micMuted ? tr("Muted", "مكتوم") : `${Math.round(micLevel * 100)}%`}</span></div><div className="mic-test-meter"><span style={{ width: `${micMuted ? 0 : Math.round(micLevel * 100)}%` }}/></div></div></div>{touchDevice && <div className="touch-tuning" dir={ar ? "rtl" : "ltr"}>
         <label htmlFor="touch-sensitivity"><span><SlidersHorizontal size={15}/>{tr("Touch sensitivity", "حساسية اللمس")}</span><output htmlFor="touch-sensitivity">{touchSensitivity.toFixed(2)}×</output></label>
         <input id="touch-sensitivity" aria-label={tr("Touch sensitivity", "حساسية اللمس")} aria-valuetext={`${touchSensitivity.toFixed(2)}×`} aria-describedby="touch-control-help" onKeyDown={event => { if (event.key.startsWith("Arrow") || ["Home", "End", "PageUp", "PageDown"].includes(event.key)) event.stopPropagation(); }} type="range" min="0.45" max="1.6" step="0.05" value={touchSensitivity} onChange={event => adjustTouchSensitivity(Number(event.target.value))}/>
         <div className="sensitivity-scale"><span>{tr("Precise", "أدق")}</span><span>{tr("Faster turns", "التفاف أسرع")}</span></div>
