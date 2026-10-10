@@ -9,6 +9,24 @@ export async function ensureRooms() {
     { id: "public-harbor", code: "HARBOR", name: "Night Shift", map: "harbor", permanent: true },
   ]).onConflictDoNothing();
 }
+// Voice chat schema bootstrap: deployments upgrade in place without a migration step.
+let voiceSchemaReady: Promise<void> | null = null;
+export function ensureVoiceSchema() {
+  voiceSchemaReady ??= (async () => {
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS strike_voice_signals (
+      id text PRIMARY KEY,
+      room_id text NOT NULL REFERENCES strike_rooms(id) ON DELETE CASCADE,
+      from_player text NOT NULL,
+      to_player text NOT NULL,
+      kind text NOT NULL,
+      payload jsonb,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS strike_voice_signals_to_idx ON strike_voice_signals (to_player, created_at)`);
+    await db.execute(sql`ALTER TABLE strike_players ADD COLUMN IF NOT EXISTS voice_at timestamptz`);
+  })().catch((error) => { voiceSchemaReady = null; throw error; });
+  return voiceSchemaReady;
+}
 export async function roomView(room: typeof rooms.$inferSelect) {
   const [count] = await db.select({ value: sql<number>`count(*)::int` }).from(players).where(and(eq(players.roomId, room.id), gt(players.updatedAt, new Date(Date.now() - 20000))));
   return { ...room, playerCount: count?.value ?? 0 };
