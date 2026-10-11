@@ -3,73 +3,73 @@
   "widgets": [
     {
       "name": "room",
-      "x": 12,
-      "y": 8,
-      "width": 301,
-      "height": 38.1875,
-      "right": 313,
-      "bottom": 46.1875
+      "x": 80,
+      "y": 9.09375,
+      "width": 120.046875,
+      "height": 44.796875,
+      "right": 200.046875,
+      "bottom": 53.890625
     },
     {
       "name": "timer",
-      "x": 391,
-      "y": 17.90625,
-      "width": 64,
-      "height": 52.1875,
-      "right": 455,
-      "bottom": 70.09375
+      "x": 281.84375,
+      "y": 19,
+      "width": 97.34375,
+      "height": 48,
+      "right": 379.1875,
+      "bottom": 67
     },
     {
       "name": "tools",
-      "x": 463,
+      "x": 461,
       "y": 8,
-      "width": 191,
-      "height": 60,
-      "right": 654,
-      "bottom": 68
+      "width": 194,
+      "height": 59,
+      "right": 655,
+      "bottom": 67
     },
     {
       "name": "radar",
-      "x": 321,
+      "x": 12,
       "y": 8,
-      "width": 62,
-      "height": 72,
-      "right": 383,
-      "bottom": 80
+      "width": 60,
+      "height": 70,
+      "right": 72,
+      "bottom": 78
     },
     {
       "name": "score",
-      "x": 12,
-      "y": 52,
-      "width": 301,
-      "height": 28,
-      "right": 313,
-      "bottom": 80
+      "x": 80,
+      "y": 55.890625,
+      "width": 120.046875,
+      "height": 21,
+      "right": 200.046875,
+      "bottom": 76.890625
     },
     {
       "name": "health",
       "x": 12,
-      "y": 311,
-      "width": 133.390625,
-      "height": 56,
-      "right": 145.390625,
+      "y": 313,
+      "width": 120.046875,
+      "height": 54,
+      "right": 132.046875,
       "bottom": 367
     },
     {
       "name": "armor",
-      "x": 155.390625,
-      "y": 311,
-      "width": 94,
-      "height": 56,
-      "right": 249.390625,
+      "x": 140.046875,
+      "y": 313,
+      "width": 88,
+      "height": 54,
+      "right": 228.046875,
       "bottom": 367
     },
     {
       "name": "ammo",
-      "x": 501.59375,
-      "y": 311,
-      "width": 153.40625,
-      "height": 56,
+      "x": 508.265625,
+      "y": 313,
+      "width": 146.734375,
+      "height": 54,
       "right": 655,
       "bottom": 367
     }
@@ -77,20 +77,20 @@
   "controls": [
     {
       "name": "Mute microphone",
-      "x": 463,
+      "x": 461,
       "y": 8,
       "width": 44,
       "height": 44,
-      "right": 507,
+      "right": 505,
       "bottom": 52
     },
     {
       "name": "Enable sound",
-      "x": 512,
+      "x": 511,
       "y": 8,
       "width": 44,
       "height": 44,
-      "right": 556,
+      "right": 555,
       "bottom": 52
     },
     {
@@ -104,66 +104,66 @@
     },
     {
       "name": "Pause game",
-      "x": 610,
+      "x": 611,
       "y": 8,
       "width": 44,
       "height": 44,
-      "right": 654,
+      "right": 655,
       "bottom": 52
     },
     {
       "name": "Movement joystick",
       "x": 12,
-      "y": 159,
-      "width": 142,
-      "height": 142,
-      "right": 154,
-      "bottom": 301
+      "y": 165,
+      "width": 140,
+      "height": 140,
+      "right": 152,
+      "bottom": 305
     },
     {
       "name": "Hold to fire",
       "x": 523,
-      "y": 211,
+      "y": 215,
       "width": 76,
       "height": 76,
       "right": 599,
-      "bottom": 287
+      "bottom": 291
     },
     {
       "name": "Reload weapon",
       "x": 467,
-      "y": 253,
+      "y": 257,
       "width": 48,
       "height": 48,
       "right": 515,
-      "bottom": 301
+      "bottom": 305
     },
     {
       "name": "Jump",
       "x": 607,
-      "y": 197,
+      "y": 201,
       "width": 48,
       "height": 48,
       "right": 655,
-      "bottom": 245
+      "bottom": 249
     },
     {
       "name": "Throw grenade",
       "x": 467,
-      "y": 197,
+      "y": 201,
       "width": 48,
       "height": 48,
       "right": 515,
-      "bottom": 245
+      "bottom": 249
     },
     {
       "name": "Toggle aim down sights",
       "x": 607,
-      "y": 253,
+      "y": 257,
       "width": 48,
       "height": 48,
       "right": 655,
-      "bottom": 301
+      "bottom": 305
     }
   ],
   "viewport": {

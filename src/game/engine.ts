@@ -306,7 +306,14 @@ export class ArenaEngine {
     if (this.kills % 5 === 0) this.callbacks.feedback("info", `WAVE ${1 + Math.floor(this.kills / 5)} · STAY SHARP`);
   }
   private hurt(amount: number) {
-    if (this.ended) return; this.hp = Math.max(0, this.hp - amount); this.lastDamage = this.elapsed; this.shake = 0.6; this.audio.hurt(); this.callbacks.feedback("damage", "TAKING FIRE"); if (this.hp <= 0) this.finish(false);
+    if (this.ended) return;
+    const minHp = (this.config.session && !this.pvp) ? 20 : 0;
+    this.hp = Math.max(minHp, this.hp - amount);
+    this.lastDamage = this.elapsed;
+    this.shake = 0.6;
+    this.audio.hurt();
+    this.callbacks.feedback("damage", "TAKING FIRE");
+    if (this.hp <= 0) this.finish(false);
   }
   private updateBots(dt: number) {
     const wave = 1 + Math.floor(this.kills / 5);

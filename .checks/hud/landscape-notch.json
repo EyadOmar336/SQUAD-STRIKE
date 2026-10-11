@@ -1,0 +1,173 @@
+{
+  "failures": [],
+  "widgets": [
+    {
+      "name": "room",
+      "x": 122,
+      "y": 9.09375,
+      "width": 150,
+      "height": 44.796875,
+      "right": 272,
+      "bottom": 53.890625
+    },
+    {
+      "name": "timer",
+      "x": 385.328125,
+      "y": 19,
+      "width": 97.34375,
+      "height": 48,
+      "right": 482.671875,
+      "bottom": 67
+    },
+    {
+      "name": "tools",
+      "x": 596,
+      "y": 8,
+      "width": 194,
+      "height": 59,
+      "right": 790,
+      "bottom": 67
+    },
+    {
+      "name": "radar",
+      "x": 54,
+      "y": 8,
+      "width": 60,
+      "height": 70,
+      "right": 114,
+      "bottom": 78
+    },
+    {
+      "name": "score",
+      "x": 122,
+      "y": 55.890625,
+      "width": 150,
+      "height": 21,
+      "right": 272,
+      "bottom": 76.890625
+    },
+    {
+      "name": "health",
+      "x": 54,
+      "y": 307,
+      "width": 138,
+      "height": 54,
+      "right": 192,
+      "bottom": 361
+    },
+    {
+      "name": "armor",
+      "x": 200,
+      "y": 307,
+      "width": 109.71875,
+      "height": 54,
+      "right": 309.71875,
+      "bottom": 361
+    },
+    {
+      "name": "ammo",
+      "x": 620,
+      "y": 307,
+      "width": 170,
+      "height": 54,
+      "right": 790,
+      "bottom": 361
+    }
+  ],
+  "controls": [
+    {
+      "name": "Mute microphone",
+      "x": 596,
+      "y": 8,
+      "width": 44,
+      "height": 44,
+      "right": 640,
+      "bottom": 52
+    },
+    {
+      "name": "Enable sound",
+      "x": 646,
+      "y": 8,
+      "width": 44,
+      "height": 44,
+      "right": 690,
+      "bottom": 52
+    },
+    {
+      "name": "Toggle fullscreen",
+      "x": 696,
+      "y": 8,
+      "width": 44,
+      "height": 44,
+      "right": 740,
+      "bottom": 52
+    },
+    {
+      "name": "Pause game",
+      "x": 746,
+      "y": 8,
+      "width": 44,
+      "height": 44,
+      "right": 790,
+      "bottom": 52
+    },
+    {
+      "name": "Movement joystick",
+      "x": 54,
+      "y": 159,
+      "width": 140,
+      "height": 140,
+      "right": 194,
+      "bottom": 299
+    },
+    {
+      "name": "Hold to fire",
+      "x": 658,
+      "y": 209,
+      "width": 76,
+      "height": 76,
+      "right": 734,
+      "bottom": 285
+    },
+    {
+      "name": "Reload weapon",
+      "x": 602,
+      "y": 251,
+      "width": 48,
+      "height": 48,
+      "right": 650,
+      "bottom": 299
+    },
+    {
+      "name": "Jump",
+      "x": 742,
+      "y": 195,
+      "width": 48,
+      "height": 48,
+      "right": 790,
+      "bottom": 243
+    },
+    {
+      "name": "Throw grenade",
+      "x": 602,
+      "y": 195,
+      "width": 48,
+      "height": 48,
+      "right": 650,
+      "bottom": 243
+    },
+    {
+      "name": "Toggle aim down sights",
+      "x": 742,
+      "y": 251,
+      "width": 48,
+      "height": 48,
+      "right": 790,
+      "bottom": 299
+    }
+  ],
+  "viewport": {
+    "width": 844,
+    "height": 390
+  }
+}

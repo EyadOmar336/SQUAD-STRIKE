@@ -1,7 +1,5 @@
 {
-  "failures": [
-    "Horizontal overflow"
-  ],
+  "failures": [],
   "widgets": [
     {
       "name": "room",

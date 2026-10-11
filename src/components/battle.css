@@ -27,11 +27,11 @@
   -webkit-user-select: none;
   touch-action: none;
 }
-.battle-canvas { position: absolute; inset: 0; touch-action: none; }
-.battle-canvas canvas { display: block; width: 100%; height: 100%; outline: none !important; cursor: crosshair; }
+.battle-canvas { position: absolute; inset: 0; touch-action: none; overflow: hidden; }
+.battle-canvas canvas { display: block; width: 100%; max-width: 100%; height: 100%; max-height: 100%; outline: none !important; cursor: crosshair; }
 .game-vignette { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px #0a120c60; background: linear-gradient(180deg,#09130969,transparent 24%,transparent 72%,#0b140e96); }
 /* Read-only HUD never steals a look gesture; only the actual toolbar is interactive. */
-.battle-hud { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.battle-hud { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .battle-hud[inert] { visibility: hidden; }
 .hud-top {
   position: absolute;
@@ -149,7 +149,7 @@
 .damage-vignette { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(ellipse,transparent 25%,#ba3a1640 75%,#df612c9e); animation: damage-flash .55s ease-out forwards; box-shadow: inset 0 0 90px #df573780; }
 .critical-vignette { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 80px #bb512b8c; animation: critical-pulse 1.3s ease-in-out infinite; }
 /* Touch controls: a generous move region and an independent two-row action grid. */
-.touch-controls { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.touch-controls { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
 .touch-look-zone { position: absolute; left: 38%; right: 0; top: calc(var(--hud-top-edge) + var(--header-height) + 4px); bottom: calc(var(--hud-bottom-edge) + var(--dock-height)); pointer-events: auto; touch-action: none; }
 .touch-joystick { position: absolute; left: var(--hud-left); bottom: var(--controls-bottom); width: var(--stick-hit); height: var(--stick-hit); z-index: 1; pointer-events: auto; touch-action: none; border-radius: 18px; }
 .joystick-base { position: absolute; left: var(--stick-x,50%); top: var(--stick-y,50%); transform: translate(-50%,-50%); width: var(--stick-size); height: var(--stick-size); border: 1px solid #e0f3c86b; border-radius: 50%; background: #1528177d; box-shadow: inset 0 0 20px #e7fcd509,0 4px 18px #0712071a; pointer-events: none; }
@@ -343,60 +343,138 @@
   .battle-arabic .hud-operation h1 { font-size: 16px; }
 }
 /* Landscape moves the radar into the top grid and keeps both thumb zones low. */
+/* Landscape moves the radar to the far left, centers the timer, and isolates the tools toolbar. */
 @media (orientation: landscape) and (max-height: 600px) {
   .battle-shell {
     --hud-edge: 12px;
     --hud-top-edge: max(8px,calc(var(--game-safe-top,0px) + 5px));
     --hud-bottom-edge: calc(var(--game-safe-bottom,0px) + 8px);
-    --header-height: 72px;
-    --dock-height: 56px;
-    --stick-hit: 142px;
-    --stick-size: 108px;
+    --header-height: 68px;
+    --dock-height: 54px;
+    --stick-hit: 140px;
+    --stick-size: 106px;
     --action-size: 48px;
     --fire-size: 76px;
     --control-gap: 8px;
-    --controls-bottom: calc(var(--hud-bottom-edge) + var(--dock-height) + 10px);
+    --controls-bottom: calc(var(--hud-bottom-edge) + var(--dock-height) + 8px);
   }
-  .hud-top { grid-template-columns: minmax(0,1fr) 114px 62px 68px minmax(192px, max-content); grid-template-areas: "operation score radar timer tools"; column-gap: 10px; align-items: start; }
-  .hud-operation { align-self: center; gap: 8px; }
-  .operation-icon { width: 30px; height: 34px; }
-  .hud-operation h1 { font-size: 22px; }
-  .operation-type { font-size: 8px; letter-spacing: .8px; }
-  .hud-room-meta { font-size: 9px; gap: 6px; }
-  .hud-room-code { font-size: 8px; padding: 0 4px; }
-  .hud-tools { align-self: start; width: max-content; }
-  .hud-match { align-self: center; }
-  .match-clock { font-size: 32px; }
-  .match-mode { font-size: 8px; letter-spacing: .4px; }
-  .match-clock-line { width: 40px; margin-top: 3px; }
-  .hud-score { align-self: center; padding: 6px 8px; gap: 4px 7px; }
-  .hud-score > .score-label { font-size: 8px; }
-  .hud-score > b { font-size: 27px; }
-  .hud-score > small { font-size: 9px; gap: 4px; }
-  .stat-description { font-size: 7px; }
-  .minimap-panel { grid-area: radar; position: static; width: 62px; align-self: start; }
-  .minimap-frame { width: 62px; height: 62px; border-radius: 4px; }
-  .minimap-caption { font-size: 7px; line-height: 9px; padding-top: 1px; gap: 4px; }
+  .hud-top {
+    display: grid;
+    grid-template-columns: auto minmax(0, max-content) minmax(14px, 1fr) auto minmax(14px, 1fr) auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "radar operation gap1 timer gap2 tools"
+      "radar score     gap1 timer gap2 tools";
+    column-gap: 8px;
+    row-gap: 2px;
+    align-items: center;
+  }
+  .minimap-panel {
+    grid-area: radar;
+    position: static;
+    width: 60px;
+    align-self: center;
+  }
+  .minimap-frame {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+  }
+  .minimap-caption {
+    font-size: 7px;
+    line-height: 9px;
+    padding-top: 1px;
+    gap: 3px;
+  }
   .minimap-caption svg { width: 9px; height: 9px; }
+  .hud-operation {
+    grid-area: operation;
+    align-self: end;
+    gap: 6px;
+    min-width: 0;
+    max-width: clamp(100px, 18vw, 150px);
+    overflow: hidden;
+  }
+  .operation-icon { display: none; }
+  .hud-operation-text { min-width: 0; overflow: hidden; }
+  .operation-type { font-size: 7.5px; letter-spacing: .6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-operation h1 { font-size: 18px; line-height: 1.1; margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-room-meta { font-size: 8.5px; line-height: 12px; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-room-code { font-size: 7.5px; padding: 0 4px; }
+  .hud-score {
+    grid-area: score;
+    align-self: start;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    min-width: 0;
+    max-width: clamp(100px, 18vw, 150px);
+    overflow: hidden;
+  }
+  .hud-score > .score-label { font-size: 7.5px; }
+  .hud-score > b { font-size: 21px; line-height: 1; }
+  .hud-score > small { font-size: 8.5px; gap: 3px; white-space: nowrap; }
+  .stat-description { display: none; }
+  .hud-match {
+    grid-area: timer;
+    justify-self: center;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 76px;
+    padding: 0 4px;
+  }
+  .match-mode { font-size: 8px; letter-spacing: .6px; white-space: nowrap; }
+  .match-clock { font-size: 32px; font-weight: 700; line-height: 1; letter-spacing: 1.5px; font-variant-numeric: tabular-nums; }
+  .match-clock-line { width: 42px; height: 2px; margin-top: 2px; }
+  .hud-tools {
+    grid-area: tools;
+    justify-self: end;
+    align-self: start;
+    width: max-content;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .hud-tool-buttons {
+    display: flex;
+    gap: 6px;
+    width: auto;
+  }
+  .hud-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 6px;
+  }
+  .game-connection { font-size: 7.5px; }
   .compass,.desktop-controls { display: none; }
-  .hud-bottom { grid-template-columns: clamp(120px,20vw,148px) clamp(94px,14vw,116px) minmax(0,1fr) clamp(142px,23vw,180px); gap: 10px; }
+  .hud-bottom { grid-template-columns: clamp(110px,18vw,138px) clamp(88px,13vw,110px) minmax(0,1fr) clamp(132px,22vw,170px); gap: 8px; }
   .resource-panel { padding: 7px 9px; }
   .resource-heading { font-size: 8px; gap: 5px; letter-spacing: .3px; }
   .resource-heading > svg { width: 14px; height: 14px; }
   .health-panel { gap: 4px; }
   .health-reading { gap: 3px; }
-  .health-reading strong { font-size: 29px; }
+  .health-reading strong { font-size: 28px; }
   .health-reading > span { font-size: 9px; }
   .health-track { height: 3px; }
   .armor-panel { column-gap: 4px; }
-  .armor-panel > strong { font-size: 24px; }
+  .armor-panel > strong { font-size: 23px; }
   .armor-panel > small { font-size: 8px; letter-spacing: 0; }
   .weapon-label { font-size: 10px; gap: 3px; }
   .weapon-label > span:last-child { font-size: 7px; }
   .ammo-panel { gap: 3px 7px; }
   .ammo-count { gap: 4px; }
-  .ammo-count > strong { font-size: 34px; }
-  .ammo-count > span { font-size: 19px; }
+  .ammo-count > strong { font-size: 32px; }
+  .ammo-count > span { font-size: 18px; }
   .grenade-count { font-size: 9px; gap: 4px; }
   .grenade-count > span { font-size: 8px; }
   .touch-action > span { font-size: 8px; }
@@ -428,41 +506,6 @@
   .battle-loading { gap: 15px; }
   .battle-loading h2 { font-size: 29px; }
   .loading-crosshair { margin-bottom: 10px; }
-  .battle-arabic .hud-operation h1 { font-size: 19px; }
-}
-/* Small landscape phones give the room and statistics their own two rows. */
-@media (orientation: landscape) and (max-height: 600px) and (max-width: 760px) {
-  .hud-top {
-    grid-template-columns: minmax(0,1fr) 62px 64px minmax(192px, max-content);
-    grid-template-rows: 40px 28px;
-    grid-template-areas:
-      "operation radar timer tools"
-      "score     radar timer tools";
-    gap: 4px 8px;
-  }
-  .operation-icon,.operation-type { display: none; }
-  .hud-operation { align-self: start; }
-  .hud-operation h1 { font-size: 20px; margin: 0 0 2px; }
-  .hud-room-meta { font-size: 9px; line-height: 12px; }
-  .hud-score {
-    display: flex;
-    align-items: center;
-    align-self: center;
-    justify-content: flex-start;
-    gap: 8px;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    padding: 0;
-    height: 28px;
-  }
-  .hud-score > b { font-size: 24px; }
-  .hud-score > small { font-size: 9px; }
-  .hud-score > .score-label { font-size: 8px; }
-  .stat-description { display: none; }
-  .hud-match { align-self: center; padding-top: 0; }
-  .minimap-panel { align-self: center; }
-  .game-connection { font-size: 7px; }
   .battle-arabic .hud-operation h1 { font-size: 17px; }
 }
 @media (orientation: landscape) and (max-height: 350px) {
@@ -471,11 +514,24 @@
     --stick-size: 96px;
     --action-size: 44px;
     --fire-size: 72px;
-    --header-height: 66px;
+    --header-height: 60px;
+    --dock-height: 50px;
+    --controls-bottom: calc(var(--hud-bottom-edge) + var(--dock-height) + 8px);
   }
+  .minimap-panel { width: 52px; }
+  .minimap-frame { width: 52px; height: 52px; }
+  .match-clock { font-size: 28px; }
+  .match-mode { font-size: 7.5px; }
+  .hud-operation h1 { font-size: 16px; }
+  .hud-score > b { font-size: 19px; }
+  .hud-bottom { grid-template-columns: clamp(100px,18vw,128px) clamp(84px,13vw,106px) minmax(0,1fr) clamp(128px,22vw,160px); gap: 8px; }
+  .health-reading strong { font-size: 25px; }
+  .armor-panel > strong { font-size: 20px; }
+  .ammo-count > strong { font-size: 28px; }
+  .ammo-count > span { font-size: 16px; }
   .touch-action > svg { width: 20px; height: 20px; }
-  .engage-panel { padding: 17px 22px; }
-  .engage-panel h2 { font-size: 28px; }
+  .engage-panel { padding: 16px 20px; }
+  .engage-panel h2 { font-size: 26px; }
 }
 /* Browser chrome can leave under 310px of actual landscape height. Reflow, don't scale. */
 @media (orientation: landscape) and (max-height: 310px) {
