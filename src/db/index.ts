@@ -415,3 +415,4 @@ const memoryDb: StrikeDatabase = createMemoryDb();
 
 // Export db: use real Drizzle if DATABASE_URL is configured, otherwise seamless in-memory DB
 export const db: StrikeDatabase = (realDb ?? memoryDb) as StrikeDatabase;
+export const hasPersistentDatabase = realDb !== null;
