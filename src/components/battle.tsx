@@ -110,11 +110,13 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
   const touchSensitivityRef = useRef(0.9);
   const voiceRef = useRef<SquadVoice | null>(null);
   const [micStatus, setMicStatus] = useState<VoiceStatus>("uninitialized");
+  const [voiceError, setVoiceError] = useState("");
   const [micMuted, setMicMuted] = useState(config.settings.micMuted ?? false);
   const [micMode, setMicMode] = useState<VoiceMode>(config.settings.micMode || "open");
   const [micTransmitting, setMicTransmitting] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [micSpeaking, setMicSpeaking] = useState(false);
+  const pttPointerActive = useRef(false);
 
   const resetTouch = useCallback(() => {
     for (const pointer of [lookPointer, firePointer]) {
@@ -133,12 +135,12 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
   const tr = useCallback((en: string, arabic: string) => ar ? arabic : en, [ar]);
 
   useEffect(() => {
-    if (config.settings.micEnabled === false) return;
     const voice = new SquadVoice(config.settings.micMode || "open", config.settings.micMuted ?? false);
     voiceRef.current = voice;
 
     const unsub = voice.subscribe({
       onStatusChange: (st) => setMicStatus(st),
+      onErrorChange: (message) => setVoiceError(message),
       onSpeakingChange: (spk) => {
         setMicSpeaking(spk);
         setMicTransmitting(voice.isTransmitting() && spk);
@@ -149,25 +151,32 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
       },
     });
 
-    voice.init().then((ok) => {
-      if (ok) {
-        setNotice({ id: performance.now(), text: tr("SQUAD COMMS ACTIVE · PRESS 'V' TO TALK", "الميكروفون مفعّل · اضغط V للتحدث") });
-      }
-    });
+    if (config.session) {
+      voice.connectRoom(config.session.room.code, config.session.token, config.session.playerId);
+    }
+    if (config.settings.micEnabled !== false) {
+      voice.init().then((ok) => {
+        if (ok) {
+          setNotice({ id: performance.now(), text: tr("SQUAD COMMS ACTIVE · PRESS 'V' TO TALK", "الميكروفون مفعّل · اضغط V للتحدث") });
+        }
+      });
+    }
 
     return () => {
       unsub();
       voice.dispose();
       voiceRef.current = null;
     };
-  }, [config.settings.micEnabled, config.settings.micMode, config.settings.micMuted, tr]);
+  }, [config.settings.micEnabled, config.settings.micMode, config.settings.micMuted, config.session, tr]);
 
   const toggleMic = useCallback(async () => {
+    await voiceRef.current?.resumePlayback();
     if (!voiceRef.current || micStatus === "uninitialized" || micStatus === "denied") {
       const voice = voiceRef.current || new SquadVoice(micMode, false);
       voiceRef.current = voice;
       const ok = await voice.init();
       if (ok) {
+        voice.setMuted(false);
         setMicMuted(false);
         setNotice({ id: performance.now(), text: tr("MICROPHONE CONNECTED", "تم تفعيل الميكروفون") });
       } else {
@@ -328,24 +337,37 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
             <button
               className={`hud-icon mic-button ${micMuted ? "is-muted" : micTransmitting ? "is-transmitting" : "is-active"}`}
               aria-label={micMuted ? "Unmute microphone" : "Mute microphone"}
-              title={micMuted ? tr("Microphone muted (V to push-to-talk)", "الميكروفون مكتوم (V للتحدث)") : tr("Microphone on (V to push-to-talk)", "الميكروفون مفعّل (V للتحدث)")}
-              onClick={toggleMic}
-              onPointerDown={event => {
+              title={voiceError || (micMuted ? tr("Microphone muted (V to push-to-talk)", "الميكروفون مكتوم (V للتحدث)") : tr("Microphone on (V to push-to-talk)", "الميكروفون مفعّل (V للتحدث)"))}
+              onClick={() => { if (micMode !== "ptt") void toggleMic(); }}
+              onPointerDown={async event => {
                 if (micMode === "ptt") {
                   event.preventDefault();
-                  voiceRef.current?.setPtt(true);
-                  setMicTransmitting(true);
+                  const button = event.currentTarget;
+                  const pointerId = event.pointerId;
+                  button.setPointerCapture(pointerId);
+                  pttPointerActive.current = true;
+                  let voice = voiceRef.current;
+                  if (!voice || micStatus === "uninitialized" || micStatus === "denied") {
+                    voice = voice || new SquadVoice(micMode, false);
+                    voiceRef.current = voice;
+                    if (!(await voice.init()) || !pttPointerActive.current) return;
+                  }
+                  voice.setPtt(true);
+                  setMicTransmitting(voice.isTransmitting());
                 }
               }}
               onPointerUp={event => {
                 if (micMode === "ptt") {
                   event.preventDefault();
+                  pttPointerActive.current = false;
                   voiceRef.current?.setPtt(false);
                   setMicTransmitting(false);
+                  if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
                 }
               }}
               onPointerCancel={() => {
                 if (micMode === "ptt") {
+                  pttPointerActive.current = false;
                   voiceRef.current?.setPtt(false);
                   setMicTransmitting(false);
                 }
@@ -385,7 +407,7 @@ export default function Battle({ config, ar, onResult, onExit }: Props) {
       )}
       {!blocked && <div className={`crosshair ${hud.reloading ? "reloading" : ""}`}><i/><i/><i/><i/><span/>{hit > 0 && <div key={`hit-${hit}`} className="hit-marker"><i/><i/><i/><i/></div>}</div>}
       {kill && !blocked && <div key={kill.id} className="kill-confirmation"><div><Crosshair size={15}/><b>+{kill.points}</b><span>XP</span></div><span>{kill.text}</span>{hud.combo > 1 && <small>{hud.combo}× {tr("COMBO", "متتالية")}</small>}</div>}
-      {notice && !blocked && <div className="field-notice" key={notice.id}><Radio size={13}/><span>{notice.text}</span></div>}
+      {(voiceError || notice) && !blocked && <div className="field-notice" key={voiceError || notice?.id} role="status"><Radio size={13}/><span>{voiceError || notice?.text}</span></div>}
       <div className="hud-bottom">
         <section className={`health-panel resource-panel ${hud.hp < 30 ? "low-health" : ""}`} data-hud="health" aria-label={`${tr("Health", "الصحة")} ${hud.hp} / 100`}>
           <div className="resource-heading"><Heart size={16}/><span>{tr("HEALTH", "الصحة")}</span></div>

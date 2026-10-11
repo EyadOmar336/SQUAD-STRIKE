@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, index, bigserial } from "drizzle-orm/pg-core";
 
 export const rooms = pgTable("strike_rooms", {
   id: text("id").primaryKey(),
@@ -38,3 +38,17 @@ export const scores = pgTable("strike_scores", {
   duration: integer("duration").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const voiceSignals = pgTable("strike_voice_signals", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  roomId: text("room_id").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  senderId: text("sender_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  recipientId: text("recipient_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+}, (t) => [
+  index("strike_voice_signals_recipient_idx").on(t.roomId, t.recipientId, t.id),
+  index("strike_voice_signals_expiry_idx").on(t.expiresAt),
+]);
